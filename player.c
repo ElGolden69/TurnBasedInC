@@ -6,7 +6,7 @@
 int isNameTaken(Player *head, const char *name) {
     Player *temp = head;
     while (temp != NULL) {
-        if (strcmp(temp->name, name) == 0) return 1; // Name exists
+        if (strcmp(temp->name, name) == 0) return 1;
         temp = temp->next;
     }
     return 0;
@@ -21,24 +21,20 @@ Player* createPlayer(Player *head) {
 
     while (1) {
         printf("Enter player name: ");
-        // Read full line until newline, skipping leftover newlines
         scanf(" %[^\n]", p->name);
 
-        // Check if empty
         if (p->name[0] == '\0') {
             printf("Name cannot be empty.\n");
             continue;
         }
 
-        // Check for uniqueness
         if (isNameTaken(head, p->name)) {
             printf("Name already taken. Choose a different name.\n");
         } else {
-            break; // Name is unique
+            break;
         }
     }
 
-    // Initialize stats and potions
     p->level = 1;
     p->maxHP = 100;
     p->hp = 100;
@@ -77,7 +73,7 @@ Player* choosePlayer(Player *head) {
     int choice;
     printf("Enter the number of the player to start playing: ");
     scanf("%d", &choice);
-    getchar(); // remove leftover newline
+    getchar();
 
     if (choice < 1 || choice >= i) {
         printf("Invalid choice.\n");

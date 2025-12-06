@@ -21,22 +21,22 @@ int main() {
         printf("0. Exit\n");
         printf("Choice: ");
 
-        if (scanf("%d", &choice) != 1) {   // handle invalid input
+        if (scanf("%d", &choice) != 1) {
             printf("Invalid input. Try again.\n");
-            while (getchar() != '\n');      // clear invalid input
+            while (getchar() != '\n');
             continue;
         }
 
 
         switch (choice) {
             case 1:
-                players = addPlayer(players, createPlayer(players)); // pass head
+                players = addPlayer(players, createPlayer(players));
                 break;
             case 2: {
                 Player *currentPlayer = choosePlayer(players);
                 if (currentPlayer != NULL) {
-                    system("cls");  // clear menu text
-                    battle(currentPlayer);
+                    system("cls");
+                    battle(currentPlayer, players);
                 }
                 break;
             }

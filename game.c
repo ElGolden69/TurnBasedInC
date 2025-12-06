@@ -47,10 +47,70 @@ void printEnemyASCII(const char *filename, int offset) {
     fclose(file);
 }
 
+// ---------------- LEADERBOARD ---------------- //
+
+int compareScores(const void *a, const void *b) {
+    Player *p1 = *(Player **)a;
+    Player *p2 = *(Player **)b;
+    return p2->score - p1->score;  // descending order
+}
+
+void displayLeaderboard(Player *head) {
+    system("cls");
+    // Count players
+    int count = 0;
+    Player *temp = head;
+    while (temp) {
+        count++;
+        temp = temp->next;
+    }
+
+    if (count == 0) {
+        printf("\nNo players to show in leaderboard.\n");
+        return;
+    }
+
+    // Put players into array for sorting
+    Player **arr = malloc(sizeof(Player*) * count);
+    temp = head;
+    for (int i = 0; i < count; i++) {
+        arr[i] = temp;
+        temp = temp->next;
+    }
+
+    // Sort descending
+    qsort(arr, count, sizeof(Player*), compareScores);
+
+    // Display in a bordered box
+    int boxWidth = 40;
+    printf("\n");
+    for (int i = 0; i < boxWidth; i++) printf("*");
+    printf("\n");
+
+    printf("*%*s*\n", boxWidth-1, " LEADERBOARD ");
+    for (int i = 0; i < boxWidth; i++) printf("*");
+    printf("\n");
+
+    for (int i = 0; i < count; i++) {
+        char line[100];
+        snprintf(line, sizeof(line), "%d. %s - %d pts", i+1, arr[i]->name, arr[i]->score);
+        int padding = (boxWidth - 2 - strlen(line)) / 2;
+        printf("*%*s%s%*s*\n", padding, "", line, boxWidth - 2 - padding - strlen(line), "");
+    }
+
+    for (int i = 0; i < boxWidth; i++) printf("*");
+    printf("\n\n");
+
+    free(arr);
+}
+
+
 // ---------------- INVENTORY ---------------- //
 
-void openInventory(Player *player) {
+int openInventory(Player *player) {
     int choice;
+    int usedItem = 0;
+
     while (1) {
         printf("\n--- Inventory ---\n");
         printf("1. Healing Potion (%d left)\n", player->healPotions);
@@ -70,38 +130,51 @@ void openInventory(Player *player) {
                     player->hp += 30;
                     if (player->hp > player->maxHP) player->hp = player->maxHP;
                     printf("You used a Healing Potion! HP restored to %d/%d.\n", player->hp, player->maxHP);
+                    usedItem = 1;
                 } else printf("No Healing Potions left!\n");
                 break;
+
             case 2:
                 if (player->attackPotions > 0) {
                     player->attackPotions--;
                     player->attack += 5;
                     printf("Your Attack increased to %d!\n", player->attack);
+                    usedItem = 1;
                 } else printf("No Attack Potions left!\n");
                 break;
+
             case 3:
                 if (player->defensePotions > 0) {
                     player->defensePotions--;
                     player->defense += 5;
                     printf("Your Defense increased to %d!\n", player->defense);
+                    usedItem = 1;
                 } else printf("No Defense Potions left!\n");
                 break;
+
             case 4:
                 if (player->magicPotions > 0) {
                     player->magicPotions--;
                     player->magic += 10;
                     if (player->magic > player->maxMagic) player->magic = player->maxMagic;
                     printf("You restored some MP! MP: %d/%d.\n", player->magic, player->maxMagic);
+                    usedItem = 1;
                 } else printf("No Magic Potions left!\n");
                 break;
+
             default:
                 printf("Invalid choice.\n");
         }
 
         printf("\nPress Enter to continue...\n");
         getchar();
+
+        if (usedItem) break;   // BREAK after using an item
     }
+
+    return usedItem;
 }
+
 
 // ---------------- DISPLAY ---------------- //
 
@@ -128,7 +201,6 @@ void checkEnemyMercy(Player *player, Enemy *enemy) {
     if (enemy->hp <= enemy->maxHP / 5 && rollChance(30)) {
         printf("\nThe enemy is begging for mercy!\n");
         printf("1. Refuse\n2. Ask for a random item\n3. Ask for next enemy weakness\n");
-
         int mercyChoice;
         scanf("%d", &mercyChoice);
         getchar();
@@ -153,10 +225,14 @@ void checkEnemyMercy(Player *player, Enemy *enemy) {
             default:
                 printf("\nInvalid choice. Battle continues.\n");
         }
+
         printf("\nPress Enter to continue...\n");
         getchar();
     }
 }
+
+
+
 
 // ---------------- PLAYER TURN ---------------- //
 
@@ -224,8 +300,12 @@ int playerTurn(Player *player, Enemy *enemy) {
         }
 
     } else if (choice == 3) {
-        openInventory(player);
-        return 0;
+        int used = openInventory(player);
+
+        if (used)
+            return 1;
+        else
+            return 0;
     } else if (choice == 4) {
         printf("\nYou ran away!\n");
         exit(0);
@@ -260,19 +340,13 @@ void enemyTurn(Player *player, Enemy *enemy) {
     }
 }
 
-// ---------------- MAIN BATTLE FUNCTION ---------------- //
-
-void battle(Player *player) {
-    srand(time(NULL));
-
-    Enemy enemy = {"Imposter", 50, 10, 5, 50, "imposter"};
-
+void fightEnemy(Player *player, Enemy enemy) {
     printf("\n--- Battle Start ---\n");
     printf("%s vs %s\n\n", player->name, enemy.name);
 
     while (player->hp > 0 && enemy.hp > 0) {
         displayBattleScreen(player, &enemy, 0);
-        checkEnemyMercy(player, &enemy);
+        checkEnemyMercy(player, &enemy);  // Just call it, don't stop battle
 
         int turnUsed = playerTurn(player, &enemy);
         if (turnUsed && enemy.hp > 0) {
@@ -285,8 +359,74 @@ void battle(Player *player) {
 
     if (player->hp <= 0)
         printf("\n%s has been defeated!\n", player->name);
-    else
+    else {
         printf("\n%s is defeated!\n", enemy.name);
+
+        // Add score depending on enemy type
+        if (strcmp(enemy.name, "Vampire") == 0)
+            player->score += 50;
+        else if (strcmp(enemy.name, "Zombie") == 0)
+            player->score += 75;
+        else if (strcmp(enemy.name, "Dreadlord") == 0)
+            player->score += 150;
+
+        printf("%s earned points! Current score: %d\n", player->name, player->score);
+    }
 
     printf("\n--- Battle End ---\n");
 }
+
+
+
+
+
+// ---------------- MAIN BATTLE FUNCTION ---------------- //
+
+void battle(Player *player, Player *players) {
+    srand(time(NULL));
+
+    // FIRST ENEMY
+    Enemy enemy1 = {"Vampire", 50, 10, 5, 50, "vampire"};
+    fightEnemy(player, enemy1);
+
+    if (player->hp <= 0) {
+        printf("\nGame Over!\n");
+        displayLeaderboard(players);  // show leaderboard
+        return;   // Player lost, no 2nd battle
+    }
+
+    printf("\nYou defeated the Vampire!\n");
+    printf("Prepare for the next fight!\n\n");
+    printf("Press Enter to continue...\n");
+    getchar();
+
+    // SECOND ENEMY
+    Enemy enemy2 = {"Zombie", 70, 12, 6, 70, "zombie"};
+    fightEnemy(player, enemy2);
+
+    if (player->hp <= 0) {
+        printf("\nYou were slain by the Zombie...\n");
+        displayLeaderboard(players);  // show leaderboard
+        return;
+    }
+
+    printf("\nYou defeated the Zombie!\n");
+    printf("Prepare for the FINAL BOSS!\n\n");
+    printf("Press Enter to continue...\n");
+    getchar();
+
+    // FINAL BOSS
+    Enemy finalBoss = {"Dreadlord", 120, 18, 8, 120, "last_boss"};
+    fightEnemy(player, finalBoss);
+
+    if (player->hp <= 0) {
+        printf("\nYou were defeated by the Dreadlord...\n");
+    } else {
+        printf("\nCONGRATULATIONS! You defeated all enemies and the FINAL BOSS!\n");
+    }
+
+    // Show leaderboard after game ends
+    displayLeaderboard(players);
+}
+
+
