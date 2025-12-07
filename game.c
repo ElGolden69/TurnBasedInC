@@ -52,12 +52,11 @@ void printEnemyASCII(const char *filename, int offset) {
 int compareScores(const void *a, const void *b) {
     Player *p1 = *(Player **)a;
     Player *p2 = *(Player **)b;
-    return p2->score - p1->score;  // descending order
+    return p2->score - p1->score;
 }
 
 void displayLeaderboard(Player *head) {
     system("cls");
-    // Count players
     int count = 0;
     Player *temp = head;
     while (temp) {
@@ -236,7 +235,7 @@ void checkEnemyMercy(Player *player, Enemy *enemy) {
 
 // ---------------- PLAYER TURN ---------------- //
 
-int playerTurn(Player *player, Enemy *enemy) {
+int playerTurn(Player *player, Enemy *enemy, int *critHits, int *usedPotion) {
     int choice;
 
     printf("Actions:\n1. Attack\n2. Magic\n3. Inventory\n4. Run\nChoose action: ");
@@ -261,6 +260,7 @@ int playerTurn(Player *player, Enemy *enemy) {
             if (rollChance(20)) {
                 damageToEnemy *= 2;
                 printf("Critical Hit!\n");
+                (*critHits)++;
             }
             enemy->hp -= damageToEnemy;
             if (enemy->hp < 0) enemy->hp = 0;
@@ -302,10 +302,12 @@ int playerTurn(Player *player, Enemy *enemy) {
     } else if (choice == 3) {
         int used = openInventory(player);
 
-        if (used)
+        if (used) {
+            (*usedPotion) = 1;
             return 1;
-        else
+        } else {
             return 0;
+        }
     } else if (choice == 4) {
         printf("\nYou ran away!\n");
         exit(0);
@@ -317,7 +319,7 @@ int playerTurn(Player *player, Enemy *enemy) {
 
 // ---------------- ENEMY TURN ---------------- //
 
-void enemyTurn(Player *player, Enemy *enemy) {
+void enemyTurn(Player *player, Enemy *enemy, int *enemyMisses) {
     printf("\n--- Enemy Turn ---\n");
 
     int baseDamage = enemy->attack - (player->defense / 2);
@@ -328,6 +330,7 @@ void enemyTurn(Player *player, Enemy *enemy) {
 
     if (rollChance(10)) {
         printf("\n%s's attack missed!\n", enemy->name);
+        (*enemyMisses)++;
     } else {
         if (rollChance(15)) {
             damageToPlayer *= 2;
@@ -341,16 +344,21 @@ void enemyTurn(Player *player, Enemy *enemy) {
 }
 
 void fightEnemy(Player *player, Enemy enemy) {
+    int turns = 0;
+    int critHits = 0;
+    int enemyMisses = 0;
+    int usedPotion = 0;
     printf("\n--- Battle Start ---\n");
     printf("%s vs %s\n\n", player->name, enemy.name);
 
     while (player->hp > 0 && enemy.hp > 0) {
         displayBattleScreen(player, &enemy, 0);
-        checkEnemyMercy(player, &enemy);  // Just call it, don't stop battle
+        checkEnemyMercy(player, &enemy);
 
-        int turnUsed = playerTurn(player, &enemy);
+        int turnUsed = playerTurn(player, &enemy, &critHits, &usedPotion);
+        if (turnUsed) turns++;
         if (turnUsed && enemy.hp > 0) {
-            enemyTurn(player, &enemy);
+            enemyTurn(player, &enemy, &enemyMisses);
         }
 
         printf("\nPress Enter to continue...\n");
@@ -362,7 +370,6 @@ void fightEnemy(Player *player, Enemy enemy) {
     else {
         printf("\n%s is defeated!\n", enemy.name);
 
-        // Add score depending on enemy type
         if (strcmp(enemy.name, "Vampire") == 0)
             player->score += 50;
         else if (strcmp(enemy.name, "Zombie") == 0)
@@ -371,6 +378,22 @@ void fightEnemy(Player *player, Enemy enemy) {
             player->score += 150;
 
         printf("%s earned points! Current score: %d\n", player->name, player->score);
+
+        int bonus = 0;
+
+        bonus += critHits * 5;
+        bonus += enemyMisses * 3;
+        if (!usedPotion) bonus += 25;
+
+
+        if (turns <= 3) bonus += 50;
+        else if (turns <= 5) bonus += 25;
+        else bonus += 10;
+
+        player->score += bonus;
+        printf("\nBONUS SCORE: +%d\n", bonus);
+        printf("Critical hits: %d | Enemy misses: %d | Turns: %d\n",critHits, enemyMisses, turns);
+        printf("Current score: %d\n", player->score);
     }
 
     printf("\n--- Battle End ---\n");

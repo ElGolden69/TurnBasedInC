@@ -19,8 +19,8 @@ void printEnemyASCII(const char *filename, int offset);
 int openInventory(Player *player);
 void displayBattleScreen(Player *player, Enemy *enemy, int offset);
 void checkEnemyMercy(Player *player, Enemy *enemy);
-int playerTurn(Player *player, Enemy *enemy);
-void enemyTurn(Player *player, Enemy *enemy);
+int playerTurn(Player *player, Enemy *enemy, int *critHits, int *usedPotion);
+void enemyTurn(Player *player, Enemy *enemy, int *enemyMisses);
 void fightEnemy(Player *player, Enemy enemy);
 void battle(Player *player, Player *players);
 // Leaderboard
