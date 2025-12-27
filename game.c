@@ -201,6 +201,7 @@ void checkEnemyMercy(Player *player, Enemy *enemy) {
     if (enemy->hp <= enemy->maxHP / 5 && rollChance(30)) {
         printf("\nThe enemy is begging for mercy!\n");
         printf("1. Refuse\n2. Ask for a random item\n3. Ask for next enemy weakness\n");
+
         int mercyChoice;
         scanf("%d", &mercyChoice);
         getchar();
@@ -209,6 +210,7 @@ void checkEnemyMercy(Player *player, Enemy *enemy) {
             case 1:
                 printf("\nYou refused mercy. The battle continues!\n");
                 break;
+
             case 2: {
                 int item = rand() % 4;
                 switch (item) {
@@ -219,26 +221,23 @@ void checkEnemyMercy(Player *player, Enemy *enemy) {
                 }
                 break;
             }
-            case 3: {
-                int weaknessChoice;
-                printf("\nChoose which enemy weakness you want:\n");
-                printf("1. Zombie\n2. Vampire\n3. Final Boss\n");
-                scanf("%d", &weaknessChoice);
-                getchar();
 
-                switch (weaknessChoice) {
-                    case 1:
-                        printf("\nZombie weakness: Fire attacks\n");
-                        break;
-                    case 2:
-                        printf("\nVampire weakness: Holy or Light magic\n");
-                        break;
-                    case 3:
-                        printf("\nFinal Boss weakness: Magic defense is low\n");
-                        break;
+            case 3:
+                // Debug: print the exact enemy name
+                printf("DEBUG: enemy name = '%s'\n", enemy->name);
+
+                // Compare the enemy name correctly
+                if (strcmp(enemy->name, "Zombie") == 0)
+                    printf("\nZombie weakness: Fire attacks.\n");
+                else if (strcmp(enemy->name, "Vampire") == 0)
+                    printf("\nVampire weakness: Holy magic.\n");
+                else if (strcmp(enemy->name, "Dreadlord") == 0)
+                    printf("\nDreadlord weakness: Magic damage.\n");
+                else
+                    printf("\nEnemy weakness is unknown.\n");
                 break;
-            }
-             default:
+
+            default:
                 printf("\nInvalid choice. Battle continues.\n");
         }
 
