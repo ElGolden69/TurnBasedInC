@@ -220,15 +220,23 @@ void checkEnemyMercy(Player *player, Enemy *enemy) {
                 break;
             }
             case 3:
-                 if (strcmp(enemy.name, "Zombie") == 0)
-                    printf("\nZombie weakness: Fire attacks.\n");
-                else if (strcmp(enemy.name, "Vampire") == 0)
-                    printf("\nVampire weakness: Holy magic.\n");
-                else if (strcmp(enemy.name, "Dreadlord") == 0)
-                    printf("\nDreadlord has no weakness (sorry :/).\n");
+                
+            int weaknessChoice;
+                printf("\nChoose which enemy weakness you want:\n");
+                printf("1. Zombie\n2. Vampire\n3. Dreadlord\n");
+                scanf("%d", &weaknessChoice);
+                getchar();
+
+            switch (weaknessChoice) {
+                case 1:
+                    printf("\nZombie weakness: Fire attacks deal extra damage.\n");break;
+                case 2:
+                    printf("\nVampire weakness: Holy magic and sunlight.\n");break;
+                case 3:
+                    printf("\nDreadlord weakness: Low resistance to magic.\n");break;
+            }
                 break;
-               
-            default:
+             default:
                 printf("\nInvalid choice. Battle continues.\n");
         }
 
