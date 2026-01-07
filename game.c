@@ -231,7 +231,17 @@ void checkEnemyMercy(Player *player, Enemy *enemy) {
 
                 switch (weaknessChoice) {
                     case 1:
-                        printf("\nZombie weakness: Fire attacks deal extra damage.\n");
+                        printf("I cleanse but also destroy.\n");
+                        printf("I spread fast and fear no flesh.\n");
+                        printf("What am I?\n");
+                        printf("1. Ice\n2. Fire\n3. Poison\n");
+                        scanf("%d", &answer);
+                        getchar();
+
+                            if (answer == 2)
+                                printf("\nCorrect! Zombie weakness: Fire attacks.\n");
+                            else
+                                printf("\nWrong answer. The zombie groans and says nothing...\n");
                     break;
 
                     case 2:
